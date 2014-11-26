@@ -1,0 +1,29 @@
+---
+# File: setup.yml
+# Description: Installs nodejs
+#
+# Parameters:
+#  - nodejs_version = NodeJS version
+#  - nodejs_target  = Target binary
+#  - nodejs_arch  = Target architecture
+
+- name: Checking existing installation
+  shell: /usr/bin/test "$(node -v 2> /dev/null)" = v{{nodejs_version}}
+  register: wanted_version_installed
+  ignore_errors: true
+
+- name: Fetch nodejs binary
+  action: get_url url=http://nodejs.org/dist/v{{nodejs_version}}/node-v{{nodejs_version}}-linux-{{nodejs_arch}}.tar.gz dest=/tmp
+  when: wanted_version_installed.rc == 1
+
+- name: Extract nodejs tarball
+  command: tar xfz node-v{{nodejs_version}}-linux-{{nodejs_arch}}.tar.gz -C {{nodejs_target}} chdir=/tmp
+  when: wanted_version_installed.rc == 1
+
+- name: Installing nodejs binary
+  command: ln -sf  {{nodejs_target}}/node-v{{nodejs_version}}-linux-{{nodejs_arch}}/bin/node /usr/local/bin/node
+  when: wanted_version_installed.rc == 1
+
+- name: Installing npm binary
+  command: ln -sf  {{nodejs_target}}/node-v{{nodejs_version}}-linux-{{nodejs_arch}}/bin/npm /usr/local/bin/npm
+  when: wanted_version_installed.rc == 1
